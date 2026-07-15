@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema claro (default) — designsystem.md §4 */
+:root {
+  --color-bg-app: #f6f7fb;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-raised: #ffffff;
+  --color-border-subtle: #e2e4ec;
+  --color-text-primary: #17171b;
+  --color-text-secondary: #6b6f7d;
+  --color-text-muted: #9ca0af;
+  --color-accent-primary: #6c5ce7;
+  --color-accent-primary-hover: #5b4bd9;
+  --color-accent-soft: #edebff;
+  --color-success: #34c759;
+  --color-danger: #ff3b30;
+  --color-glow: transparent;
+}
+
+/* Tema escuro */
+[data-theme='dark'] {
+  --color-bg-app: #17171b;
+  --color-bg-surface: #232329;
+  --color-bg-surface-raised: #2a2a32;
+  --color-border-subtle: #33333d;
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #9c9ca6;
+  --color-text-muted: #6b6b76;
+  --color-accent-primary: #7c6cff;
+  --color-accent-primary-hover: #6c5ce7;
+  --color-accent-soft: #2a2450;
+  --color-success: #34c759;
+  --color-danger: #ff453a;
+  --color-glow: transparent;
+}
+
+/* Tema Momentum (laranja, sempre escuro) — fundo em gradiente aplicado à parte, ver .bg-momentum-gradient */
+[data-theme='momentum'] {
+  --color-bg-app: #0d0b09;
+  --color-bg-surface: rgba(255, 255, 255, 0.05);
+  --color-bg-surface-raised: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-text-primary: #fff6ef;
+  --color-text-secondary: #d8c9bd;
+  --color-text-muted: #a5978c;
+  --color-accent-primary: #ff6b1a;
+  --color-accent-primary-hover: #e85a0c;
+  --color-accent-soft: #3a1d0d;
+  --color-success: #34c759;
+  --color-danger: #ff453a;
+  --color-glow: #ff6b1a;
+}
+
+.bg-momentum-gradient {
+  background-image: linear-gradient(180deg, #1a1410 0%, #0d0b09 100%);
+}
+
+/* designsystem.md §8: no escuro, sombra quase não é usada — elevação vem do stroke-hairline */
+[data-theme='dark'] .shadow-xs,
+[data-theme='dark'] .shadow-sm,
+[data-theme='dark'] .shadow-md,
+[data-theme='dark'] .shadow-lg,
+[data-theme='momentum'] .shadow-xs,
+[data-theme='momentum'] .shadow-sm,
+[data-theme='momentum'] .shadow-md,
+[data-theme='momentum'] .shadow-lg {
+  box-shadow: none;
+}
+
+body {
+  @apply bg-bg-app text-text-primary font-sans antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
