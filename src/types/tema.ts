@@ -8,10 +8,32 @@ export const TEMA_CORES = [
   '#FFC93C', // yellow-500
 ] as const
 
+export const TEMA_ICONES = [
+  '📈',
+  '💻',
+  '🧘',
+  '📸',
+  '🎨',
+  '🍽️',
+  '✈️',
+  '🎬',
+  '🎮',
+  '📚',
+  '💰',
+  '🏋️',
+  '🎵',
+  '🛍️',
+  '🌱',
+  '❤️',
+] as const
+
+export const TEMA_ICONE_PADRAO = TEMA_ICONES[0]
+
 export interface Tema {
   id: string
   nome: string
   cor: string
+  icone: string
   descricao: string
   createdAt: string
   updatedAt: string

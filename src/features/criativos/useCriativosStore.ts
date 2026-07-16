@@ -18,6 +18,8 @@ interface CriativosState {
   addSlide: (criativoId: string) => Promise<void>
   removeSlide: (criativoId: string, slideId: string) => Promise<void>
   moveSlide: (criativoId: string, slideId: string, direction: 'left' | 'right') => Promise<void>
+  agendar: (id: string, dataPublicacao: string) => Promise<void>
+  desagendar: (id: string) => Promise<void>
 }
 
 async function persist(criativo: Criativo) {
@@ -124,6 +126,24 @@ export const useCriativosStore = create<CriativosState>((set, get) => ({
     const reordered = slides.map((slide, i) => ({ ...slide, ordem: i }))
     const updated = await persist({ ...current, slides: reordered })
     set({ criativos: get().criativos.map((criativo) => (criativo.id === criativoId ? updated : criativo)) })
+  },
+
+  async agendar(id, dataPublicacao) {
+    const current = get().criativos.find((criativo) => criativo.id === id)
+    if (!current) return
+    const updated = await persist({ ...current, dataPublicacao, status: 'agendado' })
+    set({ criativos: get().criativos.map((criativo) => (criativo.id === id ? updated : criativo)) })
+  },
+
+  async desagendar(id) {
+    const current = get().criativos.find((criativo) => criativo.id === id)
+    if (!current) return
+    const updated = await persist({
+      ...current,
+      dataPublicacao: undefined,
+      status: current.status === 'agendado' ? 'pronto' : current.status,
+    })
+    set({ criativos: get().criativos.map((criativo) => (criativo.id === id ? updated : criativo)) })
   },
 }))
 

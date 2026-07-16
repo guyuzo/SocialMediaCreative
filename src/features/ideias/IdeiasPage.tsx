@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useIdeiasStore } from '@/features/ideias/useIdeiasStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import { useCriativosStore } from '@/features/criativos/useCriativosStore'
 import { IdeiaCard } from '@/features/ideias/IdeiaCard'
 import { IdeiaFormModal } from '@/features/ideias/IdeiaFormModal'
@@ -94,7 +95,7 @@ export function IdeiasPage() {
           </Pill>
           {temas.map((tema) => (
             <Pill key={tema.id} active={temaFiltro === tema.id} onClick={() => setTemaFiltro(tema.id)}>
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+              <TemaIcon tema={tema} size="xs" />
               {tema.nome}
             </Pill>
           ))}

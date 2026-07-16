@@ -57,18 +57,6 @@
   background-image: linear-gradient(180deg, #1a1410 0%, #0d0b09 100%);
 }
 
-/* designsystem.md §8: no escuro, sombra quase não é usada — elevação vem do stroke-hairline */
-[data-theme='dark'] .shadow-xs,
-[data-theme='dark'] .shadow-sm,
-[data-theme='dark'] .shadow-md,
-[data-theme='dark'] .shadow-lg,
-[data-theme='momentum'] .shadow-xs,
-[data-theme='momentum'] .shadow-sm,
-[data-theme='momentum'] .shadow-md,
-[data-theme='momentum'] .shadow-lg {
-  box-shadow: none;
-}
-
 body {
   @apply bg-bg-app text-text-primary font-sans antialiased;
   transition: background-color 0.15s ease, color 0.15s ease;

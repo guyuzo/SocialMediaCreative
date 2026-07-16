@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { temasRepository } from '@/features/temas/temasRepository'
 import type { Tema } from '@/types/tema'
 
-type TemaInput = Pick<Tema, 'nome' | 'cor' | 'descricao'>
+type TemaInput = Pick<Tema, 'nome' | 'cor' | 'icone' | 'descricao'>
 
 interface TemasState {
   temas: Tema[]

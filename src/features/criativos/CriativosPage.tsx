@@ -6,6 +6,7 @@ import { Pill } from '@/components/ui/Pill'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useCriativosStore } from '@/features/criativos/useCriativosStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import { CriativoCard } from '@/features/criativos/CriativoCard'
 import { NovoCriativoModal } from '@/features/criativos/NovoCriativoModal'
 import { CRIATIVO_STATUS_LABEL, type CriativoStatus } from '@/types/criativo'
@@ -67,7 +68,7 @@ export function CriativosPage() {
             </Pill>
             {temas.map((tema) => (
               <Pill key={tema.id} active={temaFiltro === tema.id} onClick={() => setTemaFiltro(tema.id)}>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+                <TemaIcon tema={tema} size="xs" />
                 {tema.nome}
               </Pill>
             ))}

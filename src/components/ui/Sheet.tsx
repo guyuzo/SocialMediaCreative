@@ -18,7 +18,7 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
         onClick={onClose}
         className="absolute inset-0 bg-gray-950/40"
       />
-      <div className="relative w-full max-w-lg rounded-t-2xl bg-bg-surface p-6 shadow-lg">
+      <div className="relative w-full max-w-lg rounded-t-2xl border border-border-subtle bg-bg-surface p-6">
         {title && (
           <h2 className="mb-4 text-md font-semibold text-text-primary">{title}</h2>
         )}

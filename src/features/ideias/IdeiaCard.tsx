@@ -2,6 +2,7 @@ import { Pencil, Sparkles, Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { IconButton } from '@/components/ui/IconButton'
 import { Button } from '@/components/ui/Button'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import type { Ideia } from '@/types/ideia'
 import type { Tema } from '@/types/tema'
 
@@ -18,11 +19,7 @@ export function IdeiaCard({ ideia, tema, onEdit, onDelete, onPromover }: IdeiaCa
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span
-            className="h-3 w-3 shrink-0 rounded-full"
-            style={{ backgroundColor: tema?.cor ?? '#9CA0AF' }}
-            aria-hidden
-          />
+          <TemaIcon tema={tema} size="sm" />
           <h3 className="font-semibold text-text-primary">{ideia.titulo}</h3>
         </div>
         <div className="flex -mr-2 shrink-0">

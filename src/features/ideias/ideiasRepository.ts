@@ -1,4 +1,4 @@
-import { createLocalStorageRepository } from '@/lib/repository/localStorageRepository'
+import { createSupabaseRepository } from '@/lib/repository/supabaseRepository'
 import type { Ideia } from '@/types/ideia'
 
-export const ideiasRepository = createLocalStorageRepository<Ideia>('social-creative:ideias')
+export const ideiasRepository = createSupabaseRepository<Ideia>('ideias')

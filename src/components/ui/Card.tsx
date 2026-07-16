@@ -10,7 +10,7 @@ export function Card({ padding = 'default', className = '', ...props }: CardProp
   return (
     <div
       {...props}
-      className={`rounded-xl border border-border-subtle bg-bg-surface shadow-md ${paddingClass} ${className}`}
+      className={`rounded-xl border border-border-subtle bg-bg-surface ${paddingClass} ${className}`}
     />
   )
 }

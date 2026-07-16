@@ -22,6 +22,8 @@ export interface Criativo {
   status: CriativoStatus
   formato: CriativoFormato
   slides: Slide[]
+  /** Data de publicação planejada (YYYY-MM-DD), definida na Agenda (Fase 8). */
+  dataPublicacao?: string
   createdAt: string
   updatedAt: string
 }

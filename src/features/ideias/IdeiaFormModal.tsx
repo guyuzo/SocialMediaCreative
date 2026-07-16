@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
 import { Spinner } from '@/components/ui/Spinner'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import { textGenerationService } from '@/lib/ai/textService'
 import type { Tema } from '@/types/tema'
 import type { Ideia } from '@/types/ideia'
@@ -80,7 +81,7 @@ export function IdeiaFormModal({ open, onClose, temas, onSubmit, initialValue }:
           <div className="flex flex-wrap gap-2">
             {temas.map((tema) => (
               <Pill key={tema.id} active={tema.id === temaId} onClick={() => setTemaId(tema.id)}>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+                <TemaIcon tema={tema} size="xs" />
                 {tema.nome}
               </Pill>
             ))}

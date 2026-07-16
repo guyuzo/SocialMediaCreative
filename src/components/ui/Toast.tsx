@@ -28,7 +28,7 @@ export function ToastViewport() {
             key={toast.id}
             type="button"
             onClick={() => dismiss(toast.id)}
-            className="pointer-events-auto flex max-w-sm items-center gap-2 rounded-xl border border-border-subtle bg-bg-surface px-4 py-3 text-sm shadow-lg"
+            className="pointer-events-auto flex max-w-sm items-center gap-2 rounded-xl border border-border-subtle bg-bg-surface px-4 py-3 text-sm"
           >
             <Icon size={18} strokeWidth={1.75} className={VARIANT_CLASSES[toast.variant]} />
             <span className="text-text-primary">{toast.message}</span>

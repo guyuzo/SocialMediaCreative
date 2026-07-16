@@ -1,4 +1,4 @@
-import { createLocalStorageRepository } from '@/lib/repository/localStorageRepository'
+import { createSupabaseRepository } from '@/lib/repository/supabaseRepository'
 import type { Tema } from '@/types/tema'
 
-export const temasRepository = createLocalStorageRepository<Tema>('social-creative:temas')
+export const temasRepository = createSupabaseRepository<Tema>('temas')

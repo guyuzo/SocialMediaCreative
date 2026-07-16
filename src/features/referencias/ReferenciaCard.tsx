@@ -1,6 +1,7 @@
 import { Link2, NotebookPen, Pencil, Globe, Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { IconButton } from '@/components/ui/IconButton'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import type { Referencia } from '@/types/referencia'
 import type { Tema } from '@/types/tema'
 
@@ -43,7 +44,7 @@ export function ReferenciaCard({ referencia, tema, onEdit, onDelete }: Referenci
         <p className="text-sm text-text-secondary line-clamp-3">{referencia.conteudo}</p>
       )}
       <div className="flex items-center gap-1.5 text-xs text-text-muted">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema?.cor ?? '#9CA0AF' }} aria-hidden />
+        <TemaIcon tema={tema} size="xs" />
         {tema?.nome ?? 'Sem tema'}
       </div>
     </Card>

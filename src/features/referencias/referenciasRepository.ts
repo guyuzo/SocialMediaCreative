@@ -1,4 +1,4 @@
-import { createLocalStorageRepository } from '@/lib/repository/localStorageRepository'
+import { createSupabaseRepository } from '@/lib/repository/supabaseRepository'
 import type { Referencia } from '@/types/referencia'
 
-export const referenciasRepository = createLocalStorageRepository<Referencia>('social-creative:referencias')
+export const referenciasRepository = createSupabaseRepository<Referencia>('referencias')

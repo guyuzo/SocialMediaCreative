@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { IconButton } from '@/components/ui/IconButton'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import type { Tema } from '@/types/tema'
 
 interface TemaCardProps {
@@ -14,11 +15,7 @@ export function TemaCard({ tema, onEdit, onDelete }: TemaCardProps) {
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span
-            className="h-3 w-3 shrink-0 rounded-full"
-            style={{ backgroundColor: tema.cor }}
-            aria-hidden
-          />
+          <TemaIcon tema={tema} size="md" />
           <h3 className="font-semibold text-text-primary">{tema.nome}</h3>
         </div>
         <div className="flex -mr-2 shrink-0">

@@ -3,6 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import type { Tema } from '@/types/tema'
 import type { CriativoFormato } from '@/types/criativo'
 
@@ -63,7 +64,7 @@ export function NovoCriativoModal({ open, onClose, temas, onSubmit }: NovoCriati
           <div className="flex flex-wrap gap-2">
             {temas.map((tema) => (
               <Pill key={tema.id} active={tema.id === temaId} onClick={() => setTemaId(tema.id)}>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+                <TemaIcon tema={tema} size="xs" />
                 {tema.nome}
               </Pill>
             ))}

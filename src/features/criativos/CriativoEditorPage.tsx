@@ -9,7 +9,6 @@ import { Modal } from '@/components/ui/Modal'
 import { Tabs } from '@/components/ui/Tabs'
 import { useCriativosStore, proximoStatus } from '@/features/criativos/useCriativosStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
-import { useAtivosStore } from '@/features/ativos/useAtivosStore'
 import { SlideEditor } from '@/features/criativos/SlideEditor'
 import { STATUS_BADGE_CLASSES } from '@/features/criativos/statusStyles'
 import { textGenerationService } from '@/lib/ai/textService'
@@ -23,7 +22,6 @@ export function CriativoEditorPage() {
   const { criativos, loaded, load, update, remove, duplicate, updateSlide, addSlide, removeSlide, moveSlide } =
     useCriativosStore()
   const { temas, loaded: temasLoaded, load: loadTemas } = useTemasStore()
-  const createAtivo = useAtivosStore((state) => state.create)
   const showToast = useToastStore((state) => state.show)
 
   const [slideAtivo, setSlideAtivo] = useState<string | null>(null)
@@ -81,13 +79,6 @@ export function CriativoEditorPage() {
       const prompt = slide.texto || tema?.nome || 'criativo'
       const { url } = await imageGenerationService.generateSlideImage({ prompt, formato: criativo!.formato })
       await updateSlide(criativo!.id, slide.id, { imagemUrl: url, status: 'gerado', promptImagem: prompt })
-      await createAtivo({
-        origem: 'gerado',
-        url,
-        nome: `${criativo!.titulo} — slide ${slide.ordem + 1}`,
-        temaId: criativo!.temaId,
-        criativoId: criativo!.id,
-      })
     } catch {
       await updateSlide(criativo!.id, slide.id, { status: 'erro' })
       showToast('Falha ao gerar imagem do slide.', 'error')

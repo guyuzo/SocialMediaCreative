@@ -28,7 +28,7 @@ export function TemasPage() {
     setFormOpen(true)
   }
 
-  async function handleSubmit(input: { nome: string; cor: string; descricao: string }) {
+  async function handleSubmit(input: { nome: string; cor: string; icone: string; descricao: string }) {
     if (editingTema) {
       await update(editingTema.id, input)
     } else {

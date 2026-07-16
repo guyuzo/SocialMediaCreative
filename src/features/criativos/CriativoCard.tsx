@@ -2,6 +2,7 @@ import { Images } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { CRIATIVO_STATUS_LABEL, type Criativo } from '@/types/criativo'
 import { STATUS_BADGE_CLASSES } from '@/features/criativos/statusStyles'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import type { Tema } from '@/types/tema'
 
 interface CriativoCardProps {
@@ -15,7 +16,7 @@ export function CriativoCard({ criativo, tema, onOpen }: CriativoCardProps) {
 
   return (
     <button type="button" onClick={onOpen} className="text-left">
-      <Card padding="compact" className="flex flex-col gap-3 transition-shadow hover:shadow-lg">
+      <Card padding="compact" className="flex flex-col gap-3 transition-colors hover:border-accent-primary">
         <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-md bg-bg-app">
           {capa ? (
             <img src={capa} alt="" className="h-full w-full object-cover" />
@@ -33,9 +34,7 @@ export function CriativoCard({ criativo, tema, onOpen }: CriativoCardProps) {
         </div>
         <div className="flex items-center justify-between text-xs text-text-secondary">
           <span className="flex items-center gap-1.5">
-            {tema && (
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
-            )}
+            <TemaIcon tema={tema} size="xs" />
             {tema?.nome ?? 'Sem tema'}
           </span>
           <span>{criativo.slides.length} slides</span>

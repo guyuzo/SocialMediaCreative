@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
 import { Spinner } from '@/components/ui/Spinner'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import { urlExtractionService } from '@/lib/content/urlExtractionService'
 import { REFERENCIA_TIPO_LABEL, type Referencia, type ReferenciaTipo } from '@/types/referencia'
 import type { Tema } from '@/types/tema'
@@ -100,7 +101,7 @@ export function ReferenciaFormModal({ open, onClose, temas, onSubmit, initialVal
           <div className="flex flex-wrap gap-2">
             {temas.map((tema) => (
               <Pill key={tema.id} active={tema.id === temaId} onClick={() => setTemaId(tema.id)}>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+                <TemaIcon tema={tema} size="xs" />
                 {tema.nome}
               </Pill>
             ))}

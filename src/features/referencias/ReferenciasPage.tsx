@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useReferenciasStore } from '@/features/referencias/useReferenciasStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
+import { TemaIcon } from '@/features/temas/TemaIcon'
 import { ReferenciaCard } from '@/features/referencias/ReferenciaCard'
 import { ReferenciaFormModal } from '@/features/referencias/ReferenciaFormModal'
 import { REFERENCIA_TIPO_LABEL, type Referencia, type ReferenciaTipo } from '@/types/referencia'
@@ -90,7 +91,7 @@ export function ReferenciasPage() {
             </Pill>
             {temas.map((tema) => (
               <Pill key={tema.id} active={temaFiltro === tema.id} onClick={() => setTemaFiltro(tema.id)}>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tema.cor }} aria-hidden />
+                <TemaIcon tema={tema} size="xs" />
                 {tema.nome}
               </Pill>
             ))}
