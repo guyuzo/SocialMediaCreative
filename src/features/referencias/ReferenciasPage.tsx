@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Plus, Tags } from 'lucide-react'
+import { BookOpen, Plus, Search, Tags } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Pill'
 import { Modal } from '@/components/ui/Modal'
@@ -10,6 +10,7 @@ import { useTemasStore } from '@/features/temas/useTemasStore'
 import { TemaIcon } from '@/features/temas/TemaIcon'
 import { ReferenciaCard } from '@/features/referencias/ReferenciaCard'
 import { ReferenciaFormModal } from '@/features/referencias/ReferenciaFormModal'
+import { ReferenciaSearchModal } from '@/features/referencias/ReferenciaSearchModal'
 import { REFERENCIA_TIPO_LABEL, type Referencia, type ReferenciaTipo } from '@/types/referencia'
 
 const TIPOS: ReferenciaTipo[] = ['link', 'site', 'anotacao']
@@ -20,6 +21,7 @@ export function ReferenciasPage() {
   const { temas, loaded: temasLoaded, load: loadTemas } = useTemasStore()
 
   const [formOpen, setFormOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [editing, setEditing] = useState<Referencia | undefined>(undefined)
   const [toDelete, setToDelete] = useState<Referencia | undefined>(undefined)
   const [temaFiltro, setTemaFiltro] = useState<string | null>(null)
@@ -77,10 +79,16 @@ export function ReferenciasPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-text-primary">Referências</h1>
-        <Button onClick={openCreate}>
-          <Plus size={18} strokeWidth={2} />
-          Nova referência
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setSearchOpen(true)} disabled={temas.length === 0}>
+            <Search size={18} strokeWidth={2} />
+            Pesquisar com IA
+          </Button>
+          <Button onClick={openCreate}>
+            <Plus size={18} strokeWidth={2} />
+            Nova referência
+          </Button>
+        </div>
       </div>
 
       {temas.length > 0 && (
@@ -139,6 +147,8 @@ export function ReferenciasPage() {
         temas={temas}
         initialValue={editing}
       />
+
+      <ReferenciaSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} temas={temas} />
 
       <Modal
         open={!!toDelete}

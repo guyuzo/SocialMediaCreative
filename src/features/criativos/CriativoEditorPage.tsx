@@ -9,10 +9,12 @@ import { Modal } from '@/components/ui/Modal'
 import { Tabs } from '@/components/ui/Tabs'
 import { useCriativosStore, proximoStatus } from '@/features/criativos/useCriativosStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
+import { useReferenciasStore } from '@/features/referencias/useReferenciasStore'
 import { SlideEditor } from '@/features/criativos/SlideEditor'
 import { STATUS_BADGE_CLASSES } from '@/features/criativos/statusStyles'
 import { textGenerationService } from '@/lib/ai/textService'
 import { imageGenerationService } from '@/lib/ai/imageService'
+import { buildContextoFromReferencias } from '@/lib/content/buildContexto'
 import { useToastStore } from '@/lib/toast/useToastStore'
 import { CRIATIVO_STATUS_LABEL, SLIDE_MAX, SLIDE_MIN } from '@/types/criativo'
 
@@ -22,6 +24,7 @@ export function CriativoEditorPage() {
   const { criativos, loaded, load, update, remove, duplicate, updateSlide, addSlide, removeSlide, moveSlide } =
     useCriativosStore()
   const { temas, loaded: temasLoaded, load: loadTemas } = useTemasStore()
+  const { referencias, loaded: referenciasLoaded, load: loadReferencias } = useReferenciasStore()
   const showToast = useToastStore((state) => state.show)
 
   const [slideAtivo, setSlideAtivo] = useState<string | null>(null)
@@ -30,7 +33,8 @@ export function CriativoEditorPage() {
   useEffect(() => {
     if (!loaded) load()
     if (!temasLoaded) loadTemas()
-  }, [loaded, load, temasLoaded, loadTemas])
+    if (!referenciasLoaded) loadReferencias()
+  }, [loaded, load, temasLoaded, loadTemas, referenciasLoaded, loadReferencias])
 
   const criativo = criativos.find((item) => item.id === id)
   const tema = useMemo(() => temas.find((t) => t.id === criativo?.temaId), [temas, criativo])
@@ -61,8 +65,10 @@ export function CriativoEditorPage() {
     if (!slide) return
     await updateSlide(criativo!.id, slide.id, { status: 'gerando' })
     try {
+      const contexto = buildContextoFromReferencias(referencias, criativo!.temaId)
       const texto = await textGenerationService.generateSlideText({
         tema: tema?.nome ?? 'Geral',
+        contexto,
         slideIndex: slide.ordem,
       })
       await updateSlide(criativo!.id, slide.id, { texto, status: 'gerado', promptTexto: tema?.nome })

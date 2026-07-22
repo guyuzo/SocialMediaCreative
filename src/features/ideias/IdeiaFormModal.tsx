@@ -8,6 +8,9 @@ import { Pill } from '@/components/ui/Pill'
 import { Spinner } from '@/components/ui/Spinner'
 import { TemaIcon } from '@/features/temas/TemaIcon'
 import { textGenerationService } from '@/lib/ai/textService'
+import { buildContextoFromReferencias } from '@/lib/content/buildContexto'
+import { useReferenciasStore } from '@/features/referencias/useReferenciasStore'
+import { useToastStore } from '@/lib/toast/useToastStore'
 import type { Tema } from '@/types/tema'
 import type { Ideia } from '@/types/ideia'
 
@@ -25,6 +28,8 @@ export function IdeiaFormModal({ open, onClose, temas, onSubmit, initialValue }:
   const [temaId, setTemaId] = useState(temas[0]?.id ?? '')
   const [saving, setSaving] = useState(false)
   const [gerando, setGerando] = useState(false)
+  const { referencias, loaded: referenciasLoaded, load: loadReferencias } = useReferenciasStore()
+  const showToast = useToastStore((state) => state.show)
 
   useEffect(() => {
     if (!open) return
@@ -32,6 +37,10 @@ export function IdeiaFormModal({ open, onClose, temas, onSubmit, initialValue }:
     setResumo(initialValue?.resumo ?? '')
     setTemaId(initialValue?.temaId ?? temas[0]?.id ?? '')
   }, [open, initialValue, temas])
+
+  useEffect(() => {
+    if (open && !referenciasLoaded) loadReferencias()
+  }, [open, referenciasLoaded, loadReferencias])
 
   async function handleSubmit() {
     if (!titulo.trim() || !temaId) return
@@ -46,14 +55,17 @@ export function IdeiaFormModal({ open, onClose, temas, onSubmit, initialValue }:
 
   async function handleGerarComIA() {
     const tema = temas.find((t) => t.id === temaId)?.nome ?? 'Geral'
+    const contexto = buildContextoFromReferencias(referencias, temaId)
     setGerando(true)
     try {
-      const texto = await textGenerationService.generateSlideText({
+      const { titulo: tituloGerado, resumo: resumoGerado } = await textGenerationService.generateIdeia({
         tema,
-        slideIndex: Math.floor(Math.random() * 5),
+        contexto,
       })
-      setResumo(texto)
-      setTitulo(texto.split(' ').slice(0, 6).join(' '))
+      setTitulo(tituloGerado)
+      setResumo(resumoGerado)
+    } catch {
+      showToast('Falha ao gerar ideia com IA.', 'error')
     } finally {
       setGerando(false)
     }
