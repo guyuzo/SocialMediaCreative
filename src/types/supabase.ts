@@ -18,42 +18,74 @@ export type Database = {
         Row: {
           created_at: string
           data_publicacao: string | null
+          design_system_id: string | null
           formato: Database["public"]["Enums"]["criativo_formato"]
           id: string
           ideia_id: string | null
+          links_referencia: string[]
+          parent_criativo_id: string | null
+          referencias_texto: string
           status: Database["public"]["Enums"]["criativo_status"]
           tema_id: string
           titulo: string
+          tom_de_voz_id: string | null
           updated_at: string
+          version: number
         }
         Insert: {
           created_at?: string
           data_publicacao?: string | null
+          design_system_id?: string | null
           formato: Database["public"]["Enums"]["criativo_formato"]
           id?: string
           ideia_id?: string | null
+          links_referencia?: string[]
+          parent_criativo_id?: string | null
+          referencias_texto?: string
           status?: Database["public"]["Enums"]["criativo_status"]
           tema_id: string
           titulo: string
+          tom_de_voz_id?: string | null
           updated_at?: string
+          version?: number
         }
         Update: {
           created_at?: string
           data_publicacao?: string | null
+          design_system_id?: string | null
           formato?: Database["public"]["Enums"]["criativo_formato"]
           id?: string
           ideia_id?: string | null
+          links_referencia?: string[]
+          parent_criativo_id?: string | null
+          referencias_texto?: string
           status?: Database["public"]["Enums"]["criativo_status"]
           tema_id?: string
           titulo?: string
+          tom_de_voz_id?: string | null
           updated_at?: string
+          version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "criativos_design_system_id_fkey"
+            columns: ["design_system_id"]
+            isOneToOne: false
+            referencedRelation: "design_systems"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "criativos_ideia_id_fkey"
             columns: ["ideia_id"]
             isOneToOne: false
             referencedRelation: "ideias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "criativos_parent_criativo_id_fkey"
+            columns: ["parent_criativo_id"]
+            isOneToOne: false
+            referencedRelation: "criativos"
             referencedColumns: ["id"]
           },
           {
@@ -63,7 +95,41 @@ export type Database = {
             referencedRelation: "temas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "criativos_tom_de_voz_id_fkey"
+            columns: ["tom_de_voz_id"]
+            isOneToOne: false
+            referencedRelation: "tons_de_voz"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      design_systems: {
+        Row: {
+          created_at: string
+          documentacao_markdown: string
+          id: string
+          is_ativo: boolean
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          documentacao_markdown?: string
+          id?: string
+          is_ativo?: boolean
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          documentacao_markdown?: string
+          id?: string
+          is_ativo?: boolean
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       ideias: {
         Row: {
@@ -144,41 +210,127 @@ export type Database = {
           },
         ]
       }
+      slide_edit_history: {
+        Row: {
+          action_type: string
+          created_at: string
+          field_changed: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          prompt_used: string | null
+          slide_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          field_changed?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          prompt_used?: string | null
+          slide_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          field_changed?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          prompt_used?: string | null
+          slide_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slide_edit_history_slide_id_fkey"
+            columns: ["slide_id"]
+            isOneToOne: false
+            referencedRelation: "slides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       slides: {
         Row: {
           created_at: string
           criativo_id: string
+          cta_message: string | null
+          headline: string | null
           id: string
+          image_source: Database["public"]["Enums"]["slide_image_source"]
           imagem_url: string | null
+          is_imagem_editada: boolean
+          is_texto_editado: boolean
           ordem: number
+          original_cta_message: string | null
+          original_headline: string | null
+          original_subheadline: string | null
+          original_tag_text: string | null
+          original_texto: string | null
           prompt_imagem: string | null
           prompt_texto: string | null
+          regenerar_imagem_count: number
+          regenerar_texto_count: number
           status: Database["public"]["Enums"]["slide_status"]
+          subheadline: string | null
+          tag_text: string | null
           texto: string
+          tipo: Database["public"]["Enums"]["slide_tipo"] | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           criativo_id: string
+          cta_message?: string | null
+          headline?: string | null
           id?: string
+          image_source?: Database["public"]["Enums"]["slide_image_source"]
           imagem_url?: string | null
+          is_imagem_editada?: boolean
+          is_texto_editado?: boolean
           ordem: number
+          original_cta_message?: string | null
+          original_headline?: string | null
+          original_subheadline?: string | null
+          original_tag_text?: string | null
+          original_texto?: string | null
           prompt_imagem?: string | null
           prompt_texto?: string | null
+          regenerar_imagem_count?: number
+          regenerar_texto_count?: number
           status?: Database["public"]["Enums"]["slide_status"]
+          subheadline?: string | null
+          tag_text?: string | null
           texto?: string
+          tipo?: Database["public"]["Enums"]["slide_tipo"] | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           criativo_id?: string
+          cta_message?: string | null
+          headline?: string | null
           id?: string
+          image_source?: Database["public"]["Enums"]["slide_image_source"]
           imagem_url?: string | null
+          is_imagem_editada?: boolean
+          is_texto_editado?: boolean
           ordem?: number
+          original_cta_message?: string | null
+          original_headline?: string | null
+          original_subheadline?: string | null
+          original_tag_text?: string | null
+          original_texto?: string | null
           prompt_imagem?: string | null
           prompt_texto?: string | null
+          regenerar_imagem_count?: number
+          regenerar_texto_count?: number
           status?: Database["public"]["Enums"]["slide_status"]
+          subheadline?: string | null
+          tag_text?: string | null
           texto?: string
+          tipo?: Database["public"]["Enums"]["slide_tipo"] | null
           updated_at?: string
         }
         Relationships: [
@@ -248,6 +400,33 @@ export type Database = {
         }
         Relationships: []
       }
+      tons_de_voz: {
+        Row: {
+          created_at: string
+          descricao: string
+          exemplo_frase: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string
+          exemplo_frase?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          exemplo_frase?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -262,7 +441,9 @@ export type Database = {
       criativo_formato: "4:5" | "1:1"
       criativo_status: "rascunho" | "pronto" | "agendado" | "publicado"
       referencia_tipo: "link" | "site" | "anotacao"
+      slide_image_source: "none" | "uploaded" | "generated"
       slide_status: "vazio" | "gerando" | "gerado" | "editado" | "erro"
+      slide_tipo: "cover" | "body" | "cta"
       tarefa_status: "pendente" | "em_andamento" | "concluida"
     }
     CompositeTypes: {
@@ -394,7 +575,9 @@ export const Constants = {
       criativo_formato: ["4:5", "1:1"],
       criativo_status: ["rascunho", "pronto", "agendado", "publicado"],
       referencia_tipo: ["link", "site", "anotacao"],
+      slide_image_source: ["none", "uploaded", "generated"],
       slide_status: ["vazio", "gerando", "gerado", "editado", "erro"],
+      slide_tipo: ["cover", "body", "cta"],
       tarefa_status: ["pendente", "em_andamento", "concluida"],
     },
   },

@@ -3,7 +3,16 @@ import { criativosRepository } from '@/features/criativos/criativosRepository'
 import { criarSlideVazio, SLIDE_MIN, SLIDE_MAX } from '@/types/criativo'
 import type { Criativo, CriativoFormato, CriativoStatus, Slide } from '@/types/criativo'
 
-type CriativoInput = { temaId: string; titulo: string; formato: CriativoFormato; ideiaId?: string }
+type CriativoInput = {
+  temaId: string
+  titulo: string
+  formato: CriativoFormato
+  ideiaId?: string
+  designSystemId?: string
+  tomDeVozId?: string
+  linksReferencia?: string[]
+  referenciasTexto?: string
+}
 type CriativoPatch = Partial<Pick<Criativo, 'titulo' | 'status' | 'formato' | 'ideiaId'>>
 
 interface CriativosState {
@@ -41,7 +50,7 @@ export const useCriativosStore = create<CriativosState>((set, get) => ({
     set({ criativos, loaded: true })
   },
 
-  async create({ temaId, titulo, formato, ideiaId }) {
+  async create({ temaId, titulo, formato, ideiaId, designSystemId, tomDeVozId, linksReferencia, referenciasTexto }) {
     const now = new Date().toISOString()
     const criativo: Criativo = {
       id: crypto.randomUUID(),
@@ -51,6 +60,11 @@ export const useCriativosStore = create<CriativosState>((set, get) => ({
       status: 'rascunho',
       formato,
       slides: Array.from({ length: SLIDE_MIN }, (_, index) => criarSlideVazio(index)),
+      designSystemId,
+      tomDeVozId,
+      linksReferencia: linksReferencia ?? [],
+      referenciasTexto: referenciasTexto ?? '',
+      version: 1,
       createdAt: now,
       updatedAt: now,
     }

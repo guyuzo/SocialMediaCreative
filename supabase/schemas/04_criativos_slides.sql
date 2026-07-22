@@ -67,6 +67,9 @@ grant select, insert, update, delete on public.slides    to anon, authenticated;
 -- única chamada, espelhando o padrão "persist(criativo) sempre manda o
 -- objeto inteiro" de useCriativosStore.ts (updateSlide, addSlide,
 -- removeSlide, moveSlide, agendar, desagendar, update).
+-- NOTA: redefinida por completo em 07_nodes.sql para incluir as colunas da
+-- arquitetura de nodes — a versão que efetivamente roda é a de lá (aplicada
+-- depois, mesmo nome de função). Esta fica como registro da forma original.
 create or replace function public.save_criativo(p_criativo jsonb, p_slides jsonb)
 returns void
 language plpgsql
