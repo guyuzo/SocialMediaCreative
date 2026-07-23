@@ -42,7 +42,7 @@ Este documento é a fonte de verdade do modelo de dados do projeto. Ele espelha 
 erDiagram
     Tema ||--o{ Ideia : "possui"
     Tema ||--o{ Referencia : "possui"
-    Tema ||--o{ Criativo : "possui"
+    Tema |o--o{ Criativo : "possui (opcional)"
     Ideia |o--o{ Criativo : "promovida para (opcional)"
     Criativo ||--o{ Slide : "tem"
     Criativo |o--o{ Criativo : "parent_criativo_id (versão anterior)"
@@ -177,9 +177,15 @@ model Referencia {
 /// Principal. Ver src/types/criativo.ts
 model Criativo {
   id             String          @id @default(uuid())
-  temaId         String
+  /// Opcional — o fluxo de criação via Node Principal não exige mais um Tema
+  /// (decisão do usuário: Tema saiu do fluxo de Criativos). Mantido pra
+  /// Criativos antigos e pro caminho de promoção via Ideia.
+  temaId         String?
   ideiaId        String?
   titulo         String
+  /// Contexto geral da campanha, definido no Node Principal — também usado
+  /// como input pra IA na geração do carrossel.
+  descricao      String          @default("")
   status         CriativoStatus  @default(rascunho)
   formato        CriativoFormato
   /// Data de publicação planejada, definida na Agenda (Fase 8). Sem hora.
@@ -199,7 +205,7 @@ model Criativo {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  tema         Tema          @relation(fields: [temaId], references: [id], onDelete: Cascade)
+  tema         Tema?         @relation(fields: [temaId], references: [id], onDelete: SetNull)
   ideia        Ideia?        @relation(fields: [ideiaId], references: [id], onDelete: SetNull)
   designSystem DesignSystem? @relation(fields: [designSystemId], references: [id], onDelete: SetNull)
   tomDeVoz     TomDeVoz?     @relation(fields: [tomDeVozId], references: [id], onDelete: SetNull)
@@ -324,7 +330,7 @@ model Tarefa {
 | `Tema` | `Tema` (`tema.ts`) | 1:1 direto. `icone` é o emoji (Fase de revisão pós-Fase-9). |
 | `Ideia` | `Ideia` (`ideia.ts`) | 1:1 direto. |
 | `Referencia` | `Referencia` (`referencia.ts`) | 1:1 direto. `url` é opcional (anotação livre não tem). |
-| `Criativo` | `Criativo` (`criativo.ts`) | `slides` deixa de ser array embutido e vira relação 1:N com `Slide`. `dataPublicacao` é `string` (YYYY-MM-DD) no TS e `DateTime @db.Date` no Prisma — precisa de conversão na camada de repositório real. É o Node Principal: `designSystemId`/`tomDeVozId`/`linksReferencia`/`referenciasTexto` são os parâmetros globais; `version`/`parentCriativoId` implementam o versionamento não destrutivo. |
+| `Criativo` | `Criativo` (`criativo.ts`) | `slides` deixa de ser array embutido e vira relação 1:N com `Slide`. `dataPublicacao` é `string` (YYYY-MM-DD) no TS e `DateTime @db.Date` no Prisma — precisa de conversão na camada de repositório real. É o Node Principal: `titulo`/`descricao`/`designSystemId`/`tomDeVozId`/`linksReferencia`/`referenciasTexto`/formato/quantidade de slides são os parâmetros globais preenchidos no card de criação; `version`/`parentCriativoId` implementam o versionamento não destrutivo. `temaId` é opcional (Tema saiu do fluxo de criação de Criativo — FK `on delete set null`, não mais cascade). |
 | `Slide` | `Slide` (`criativo.ts`) | Hoje é sub-objeto dentro de `Criativo.slides[]` no localStorage; no Postgres vira tabela própria com FK `criativoId` e `@@unique([criativoId, ordem])` pra garantir uma posição por slide. É o Sub-Node: `tipo` (`cover`/`body`/`cta`) define quais campos de texto valem; `original*` guarda a cópia pro Reset; `imageSource`/`isTextoEditado`/`isImagemEditada`/`regenerar*Count` controlam o estado de edição mostrado na UI. |
 | `DesignSystem` | `DesignSystem` (`designSystem.ts`) | 1:1 direto. Só `titulo` + `documentacaoMarkdown` — sem campos de estilo separados, de propósito (correção do usuário sobre o plano original). |
 | `TomDeVoz` | `TomDeVoz` (`tomDeVoz.ts`) | 1:1 direto. |
@@ -359,12 +365,17 @@ Implementado hoje contra o Supabase real:
 
 ## Pivô pra arquitetura de nodes
 
-Criativos deixou de ser criado por formulário linear e passou a ser um canvas de nodes: o próprio `Criativo` é o Node Principal (parâmetros globais: tema, tom de voz, design system, links/texto de referência, quantidade de slides via `slides.length`) e o próprio `Slide` é o Sub-Node (texto estruturado por tipo, imagem, estado de edição). Ver `supabase/schemas/07_nodes.sql` e o plano em `C:\Users\DESKTOP\.claude\plans\agile-humming-boot.md`.
+Criativos deixou de ser criado por formulário linear e passou a ter um Node Principal: o próprio `Criativo` guarda os parâmetros globais (título, descrição, tom de voz, design system, links/texto de referência, formato, quantidade de slides) e o próprio `Slide` é o Sub-Node (texto estruturado por tipo, imagem, estado de edição). Ver `supabase/schemas/07_nodes.sql`, `08_node_principal.sql`, `09_criativos_tema_fk.sql` e o plano em `C:\Users\DESKTOP\.claude\plans\agile-humming-boot.md`.
+
+**Tema saiu do fluxo de criação de Criativo** (decisão do usuário, `08_node_principal.sql`): `criativos.tema_id` é opcional agora, com a FK trocada de `on delete cascade` pra `on delete set null` (`09_criativos_tema_fk.sql`) — excluir um Tema não apaga mais os Criativos que apontavam pra ele. `Criativo.descricao` foi adicionado como contexto geral da campanha (input pra IA).
+
+UI já construída: `/design-systems` e `/tons-de-voz` (CRUD simples, sem estilo Momentum/gradiente — Card neutro padrão) e o `NodePrincipalModal` (substituiu `NovoCriativoModal`) com os campos do Node Principal, incluindo Referências (links + texto) direto na criação do Criativo.
 
 Escopo cortado deliberadamente desta rodada (não pedido explicitamente, fica de fora até confirmação):
 - **Categorias/tags do carrossel** — não modelado, não existe tabela `categories`.
 - **Tela/UI de histórico de `SlideEditHistory`** — a tabela grava toda edição/regeneração, mas não há tela pra visualizar ainda.
 - **Comparação visual entre versões** (`Criativo.version`/`parentCriativoId`) — o encadeamento existe no banco, mas não há UI de "ver versões anteriores" ainda.
+- **"Gerar carrossel" ainda não chama IA de verdade** — o `NodePrincipalModal` hoje cria o `Criativo` com N slides em branco (mesmo comportamento de sempre); gerar o conteúdo dos slides via Gemini a partir do Node Principal inteiro (action `gerar-carrossel`) é o próximo passo, ainda não implementado na Edge Function `gemini`.
 
 ## Pendências / decisões que ainda não foram tomadas
 

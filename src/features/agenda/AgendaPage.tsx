@@ -112,7 +112,7 @@ export function AgendaPage() {
                       key={criativo.id}
                       className="flex items-center gap-1 truncate rounded bg-accent-soft px-1 py-0.5 text-[11px] text-accent-primary"
                     >
-                      <TemaIcon tema={temasPorId.get(criativo.temaId)} size="xs" />
+                      <TemaIcon tema={criativo.temaId ? temasPorId.get(criativo.temaId) : undefined} size="xs" />
                       <span className="truncate">{criativo.titulo}</span>
                     </span>
                   ))}

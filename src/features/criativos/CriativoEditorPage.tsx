@@ -65,7 +65,8 @@ export function CriativoEditorPage() {
     if (!slide) return
     await updateSlide(criativo!.id, slide.id, { status: 'gerando' })
     try {
-      const contexto = buildContextoFromReferencias(referencias, criativo!.temaId)
+      const contextoTema = buildContextoFromReferencias(referencias, criativo!.temaId)
+      const contexto = [criativo!.referenciasTexto, contextoTema].filter((parte) => parte?.trim()).join('\n\n') || undefined
       const texto = await textGenerationService.generateSlideText({
         tema: tema?.nome ?? 'Geral',
         contexto,

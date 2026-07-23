@@ -4,16 +4,21 @@ import { criarSlideVazio, SLIDE_MIN, SLIDE_MAX } from '@/types/criativo'
 import type { Criativo, CriativoFormato, CriativoStatus, Slide } from '@/types/criativo'
 
 type CriativoInput = {
-  temaId: string
   titulo: string
   formato: CriativoFormato
+  temaId?: string
   ideiaId?: string
+  descricao?: string
   designSystemId?: string
   tomDeVozId?: string
   linksReferencia?: string[]
   referenciasTexto?: string
+  /** Quantidade inicial de slides em branco (SLIDE_MIN..SLIDE_MAX). Default SLIDE_MIN. */
+  quantidadeSlides?: number
 }
-type CriativoPatch = Partial<Pick<Criativo, 'titulo' | 'status' | 'formato' | 'ideiaId'>>
+type CriativoPatch = Partial<
+  Pick<Criativo, 'titulo' | 'descricao' | 'status' | 'formato' | 'ideiaId' | 'designSystemId' | 'tomDeVozId' | 'linksReferencia' | 'referenciasTexto'>
+>
 
 interface CriativosState {
   criativos: Criativo[]
@@ -50,16 +55,29 @@ export const useCriativosStore = create<CriativosState>((set, get) => ({
     set({ criativos, loaded: true })
   },
 
-  async create({ temaId, titulo, formato, ideiaId, designSystemId, tomDeVozId, linksReferencia, referenciasTexto }) {
+  async create({
+    temaId,
+    titulo,
+    formato,
+    ideiaId,
+    descricao,
+    designSystemId,
+    tomDeVozId,
+    linksReferencia,
+    referenciasTexto,
+    quantidadeSlides,
+  }) {
     const now = new Date().toISOString()
+    const totalSlides = Math.min(Math.max(quantidadeSlides ?? SLIDE_MIN, SLIDE_MIN), SLIDE_MAX)
     const criativo: Criativo = {
       id: crypto.randomUUID(),
       temaId,
       ideiaId,
       titulo,
+      descricao: descricao ?? '',
       status: 'rascunho',
       formato,
-      slides: Array.from({ length: SLIDE_MIN }, (_, index) => criarSlideVazio(index)),
+      slides: Array.from({ length: totalSlides }, (_, index) => criarSlideVazio(index)),
       designSystemId,
       tomDeVozId,
       linksReferencia: linksReferencia ?? [],

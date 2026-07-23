@@ -48,7 +48,7 @@ export function AgendarDiaModal({
               {agendados.map((criativo) => (
                 <li key={criativo.id} className="flex items-center justify-between gap-2 rounded-md border border-border-subtle px-3 py-2">
                   <span className="flex items-center gap-2 text-sm text-text-primary">
-                    <TemaIcon tema={temasPorId.get(criativo.temaId)} size="xs" />
+                    <TemaIcon tema={criativo.temaId ? temasPorId.get(criativo.temaId) : undefined} size="xs" />
                     {criativo.titulo}
                   </span>
                   <button
@@ -75,7 +75,7 @@ export function AgendarDiaModal({
             <div className="flex flex-wrap gap-2">
               {elegiveis.map((criativo) => (
                 <Pill key={criativo.id} onClick={() => onAgendar(criativo.id)}>
-                  <TemaIcon tema={temasPorId.get(criativo.temaId)} size="xs" />
+                  <TemaIcon tema={criativo.temaId ? temasPorId.get(criativo.temaId) : undefined} size="xs" />
                   {criativo.titulo}
                 </Pill>
               ))}

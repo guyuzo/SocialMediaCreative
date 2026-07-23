@@ -41,9 +41,12 @@ export type CriativoFormato = '4:5' | '1:1'
 
 export interface Criativo {
   id: string
-  temaId: string
+  /** Opcional — o fluxo de criação via Node Principal não exige mais um Tema. */
+  temaId?: string
   ideiaId?: string
   titulo: string
+  /** Contexto geral da campanha (Node Principal), também usado como input pra IA. */
+  descricao: string
   status: CriativoStatus
   formato: CriativoFormato
   slides: Slide[]
@@ -73,7 +76,7 @@ export const CRIATIVO_STATUS_LABEL: Record<CriativoStatus, string> = {
 }
 
 export const SLIDE_MIN = 3
-export const SLIDE_MAX = 10
+export const SLIDE_MAX = 20
 
 export function criarSlideVazio(ordem: number): Slide {
   return {

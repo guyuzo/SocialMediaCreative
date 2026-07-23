@@ -8,9 +8,10 @@ import type { Referencia } from '@/types/referencia'
  */
 export function buildContextoFromReferencias(
   referencias: Referencia[],
-  temaId: string,
+  temaId: string | undefined,
   maxChars = 4000,
 ): string | undefined {
+  if (!temaId) return undefined
   const doTema = referencias.filter((r) => r.temaId === temaId && r.conteudo.trim())
   if (doTema.length === 0) return undefined
 

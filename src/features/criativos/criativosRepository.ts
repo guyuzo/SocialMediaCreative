@@ -25,9 +25,10 @@ function toRpcArgs(criativo: Criativo) {
   return {
     p_criativo: {
       id: criativo.id,
-      temaId: criativo.temaId,
+      temaId: criativo.temaId ?? null,
       ideiaId: criativo.ideiaId ?? null,
       titulo: criativo.titulo,
+      descricao: criativo.descricao,
       status: criativo.status,
       formato: criativo.formato,
       dataPublicacao: criativo.dataPublicacao ?? null,
