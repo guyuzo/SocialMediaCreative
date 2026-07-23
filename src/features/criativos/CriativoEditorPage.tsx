@@ -10,6 +10,7 @@ import { Tabs } from '@/components/ui/Tabs'
 import { useCriativosStore, proximoStatus } from '@/features/criativos/useCriativosStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
 import { useReferenciasStore } from '@/features/referencias/useReferenciasStore'
+import { useDesignSystemsStore } from '@/features/designSystems/useDesignSystemsStore'
 import { SlideEditor } from '@/features/criativos/SlideEditor'
 import { STATUS_BADGE_CLASSES } from '@/features/criativos/statusStyles'
 import { textGenerationService } from '@/lib/ai/textService'
@@ -25,6 +26,7 @@ export function CriativoEditorPage() {
     useCriativosStore()
   const { temas, loaded: temasLoaded, load: loadTemas } = useTemasStore()
   const { referencias, loaded: referenciasLoaded, load: loadReferencias } = useReferenciasStore()
+  const { designSystems, loaded: designSystemsLoaded, load: loadDesignSystems } = useDesignSystemsStore()
   const showToast = useToastStore((state) => state.show)
 
   const [slideAtivo, setSlideAtivo] = useState<string | null>(null)
@@ -34,10 +36,15 @@ export function CriativoEditorPage() {
     if (!loaded) load()
     if (!temasLoaded) loadTemas()
     if (!referenciasLoaded) loadReferencias()
-  }, [loaded, load, temasLoaded, loadTemas, referenciasLoaded, loadReferencias])
+    if (!designSystemsLoaded) loadDesignSystems()
+  }, [loaded, load, temasLoaded, loadTemas, referenciasLoaded, loadReferencias, designSystemsLoaded, loadDesignSystems])
 
   const criativo = criativos.find((item) => item.id === id)
   const tema = useMemo(() => temas.find((t) => t.id === criativo?.temaId), [temas, criativo])
+  const designSystem = useMemo(
+    () => designSystems.find((ds) => ds.id === criativo?.designSystemId),
+    [designSystems, criativo],
+  )
 
   useEffect(() => {
     if (criativo && (!slideAtivo || !criativo.slides.some((slide) => slide.id === slideAtivo))) {
@@ -83,9 +90,22 @@ export function CriativoEditorPage() {
     if (!slide) return
     await updateSlide(criativo!.id, slide.id, { status: 'gerando' })
     try {
-      const prompt = slide.texto || tema?.nome || 'criativo'
-      const { url } = await imageGenerationService.generateSlideImage({ prompt, formato: criativo!.formato })
-      await updateSlide(criativo!.id, slide.id, { imagemUrl: url, status: 'gerado', promptImagem: prompt })
+      const { url } = await imageGenerationService.generateSlideImage({
+        formato: criativo!.formato,
+        tipo: slide.tipo,
+        tagText: slide.tagText,
+        headline: slide.headline,
+        subheadline: slide.subheadline,
+        ctaMessage: slide.ctaMessage,
+        texto: slide.texto,
+        designSystemMarkdown: designSystem?.documentacaoMarkdown,
+      })
+      await updateSlide(criativo!.id, slide.id, {
+        imagemUrl: url,
+        status: 'gerado',
+        promptImagem: slide.headline || slide.texto || tema?.nome || 'criativo',
+        imageSource: 'generated',
+      })
     } catch {
       await updateSlide(criativo!.id, slide.id, { status: 'erro' })
       showToast('Falha ao gerar imagem do slide.', 'error')
@@ -99,9 +119,10 @@ export function CriativoEditorPage() {
       return
     }
     comImagem.forEach((s, index) => {
+      const extensao = s.imagemUrl!.split('.').pop()?.split(/[?#]/)[0]
       const link = document.createElement('a')
       link.href = s.imagemUrl!
-      link.download = `${criativo!.titulo}-slide-${index + 1}.svg`
+      link.download = `${criativo!.titulo}-slide-${index + 1}.${extensao && extensao.length <= 4 ? extensao : 'png'}`
       link.click()
     })
     showToast('Download iniciado.', 'success')

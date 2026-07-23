@@ -377,6 +377,8 @@ Escopo cortado deliberadamente desta rodada (não pedido explicitamente, fica de
 - **Comparação visual entre versões** (`Criativo.version`/`parentCriativoId`) — o encadeamento existe no banco, mas não há UI de "ver versões anteriores" ainda.
 - **"Gerar carrossel" ainda não chama IA de verdade** — o `NodePrincipalModal` hoje cria o `Criativo` com N slides em branco (mesmo comportamento de sempre); gerar o conteúdo dos slides via Gemini a partir do Node Principal inteiro (action `gerar-carrossel`) é o próximo passo, ainda não implementado na Edge Function `gemini`.
 
+**Geração de imagem real implementada** (`imageService.ts`): action `gerar-imagem-slide` na Edge Function `gemini`, modelo `gemini-3.1-flash-image` ("Nano Banana 2" — escolhido sobre `gemini-2.5-flash-image` por qualidade de renderização de texto, testado direto contra a API com prompt em português). A imagem já nasce com o texto do slide (tag/headline/subheadline/CTA ou texto livre) renderizado nela, seguindo a documentação do Design System quando houver; a function salva o resultado no bucket `carousel-images` (Storage) via `SUPABASE_SERVICE_ROLE_KEY` e devolve a URL pública. Validado ponta a ponta (Edge Function direto + fluxo real na UI).
+
 ## Pendências / decisões que ainda não foram tomadas
 
 Não implementar nada abaixo sem confirmação explícita — são decisões do produto, não técnicas:

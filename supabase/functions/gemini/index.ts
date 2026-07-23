@@ -7,7 +7,17 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 // gemini-2.5-flash não está mais disponível para chaves novas (confirmado em
 // teste direto contra a API: 404 "no longer available to new users").
 const MODEL = 'gemini-3-flash-preview'
+// "Nano Banana 2" — testado direto contra a API com prompt de texto em
+// português (acentuação incluída): renderizou o texto com precisão. Cotado
+// no PRD junto de gemini-2.5-flash-image ("Nano Banana" original, mais
+// barato); escolhido por qualidade de renderização de texto, que é
+// justamente o requisito (slide precisa nascer com o texto já embutido na
+// imagem, não como overlay separado).
+const IMAGE_MODEL = 'gemini-3.1-flash-image'
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +34,7 @@ function json(body: unknown, status = 200): Response {
 
 interface GeminiPart {
   text?: string
+  inlineData?: { mimeType?: string; data?: string }
 }
 interface GeminiCandidate {
   content?: { parts?: GeminiPart[] }
@@ -36,8 +47,8 @@ interface GeminiResponse {
   candidates?: GeminiCandidate[]
 }
 
-async function callGemini(body: Record<string, unknown>): Promise<GeminiCandidate> {
-  const res = await fetch(`${API_BASE}/${MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+async function callGemini(body: Record<string, unknown>, model: string = MODEL): Promise<GeminiCandidate> {
+  const res = await fetch(`${API_BASE}/${model}:generateContent?key=${GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -158,6 +169,80 @@ async function pesquisarLinks({ tema, query }: PesquisarLinksInput) {
   return { resultados }
 }
 
+interface GerarImagemSlideInput {
+  formato: '4:5' | '1:1'
+  tipo?: 'cover' | 'body' | 'cta'
+  tagText?: string
+  headline?: string
+  subheadline?: string
+  ctaMessage?: string
+  texto?: string
+  designSystemMarkdown?: string
+}
+
+function buildImagePrompt(input: GerarImagemSlideInput): string {
+  const aspecto = input.formato === '4:5' ? 'proporção vertical 4:5 (retrato, ~1080x1350px)' : 'proporção quadrada 1:1 (~1080x1080px)'
+
+  const textos: string[] = []
+  if (input.tagText) textos.push(`tag/label pequena: "${input.tagText}"`)
+  if (input.headline) textos.push(`headline principal: "${input.headline}"`)
+  if (input.subheadline) textos.push(`subheadline: "${input.subheadline}"`)
+  if (input.ctaMessage) textos.push(`mensagem de call-to-action: "${input.ctaMessage}"`)
+  if (textos.length === 0 && input.texto) textos.push(`texto principal: "${input.texto}"`)
+
+  return [
+    `Gere a imagem de um slide de carrossel para Instagram, ${aspecto}.`,
+    textos.length > 0
+      ? `A imagem precisa conter, renderizado como parte da própria imagem (não como legenda separada), exatamente este texto, com ortografia e acentuação corretas em português do Brasil: ${textos.join('; ')}.`
+      : 'Sem texto sobreposto nesta imagem.',
+    input.designSystemMarkdown
+      ? `Siga esta documentação de design system para cores, padding e alinhamento:\n${input.designSystemMarkdown}`
+      : 'Use um design moderno e minimalista, com bom contraste entre texto e fundo pra garantir legibilidade.',
+    'Não adicione nenhum texto além do especificado acima. Sem marca d\'água, sem logos, sem texto de exemplo em outro idioma.',
+  ].filter(Boolean).join('\n\n')
+}
+
+async function uploadImagemGerada(base64: string, mimeType: string): Promise<string> {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY não configurados — necessários pra salvar a imagem gerada no Storage.')
+  }
+  const ext = mimeType.includes('png') ? 'png' : 'jpg'
+  const path = `gerado/${crypto.randomUUID()}.${ext}`
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/carousel-images/${path}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      'Content-Type': mimeType,
+    },
+    body: bytes,
+  })
+  if (!res.ok) {
+    throw new Error(`Falha ao salvar imagem gerada no Storage: ${res.status} ${await res.text()}`)
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/carousel-images/${path}`
+}
+
+async function gerarImagemSlide(input: GerarImagemSlideInput) {
+  const prompt = buildImagePrompt(input)
+
+  const candidate = await callGemini(
+    {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { responseModalities: ['IMAGE'] },
+    },
+    IMAGE_MODEL,
+  )
+
+  const imagePart = candidate.content?.parts?.find((p) => p.inlineData?.data)
+  if (!imagePart?.inlineData?.data) throw new Error('Gemini não retornou nenhuma imagem.')
+
+  const url = await uploadImagemGerada(imagePart.inlineData.data, imagePart.inlineData.mimeType || 'image/png')
+  return { url }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS_HEADERS })
 
@@ -175,6 +260,8 @@ Deno.serve(async (req) => {
         return json(await extrairUrl(input as ExtrairUrlInput))
       case 'pesquisar-links':
         return json(await pesquisarLinks(input as PesquisarLinksInput))
+      case 'gerar-imagem-slide':
+        return json(await gerarImagemSlide(input as GerarImagemSlideInput))
       default:
         return json({ error: `Ação desconhecida: ${action}` }, 400)
     }
