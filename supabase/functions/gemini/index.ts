@@ -169,6 +169,58 @@ async function pesquisarLinks({ tema, query }: PesquisarLinksInput) {
   return { resultados }
 }
 
+interface GerarCarrosselInput {
+  titulo: string
+  descricao?: string
+  contexto?: string
+  tomDeVozNome?: string
+  tomDeVozDescricao?: string
+  tomDeVozExemplo?: string
+  designSystemMarkdown?: string
+  formato: '4:5' | '1:1'
+  quantidadeSlides: number
+}
+
+async function gerarCarrossel(input: GerarCarrosselInput) {
+  const { titulo, descricao, contexto, tomDeVozNome, tomDeVozDescricao, tomDeVozExemplo, designSystemMarkdown, quantidadeSlides } = input
+
+  const prompt = [
+    `Crie o conteúdo textual completo de um carrossel de post para Instagram com exatamente ${quantidadeSlides} slides, sobre "${titulo}".`,
+    descricao ? `Contexto da campanha: ${descricao}` : null,
+    contexto ? `Use como base o material de referência abaixo (não invente fatos fora dele quando possível):\n${contexto}` : null,
+    tomDeVozNome
+      ? `Escreva no tom de voz "${tomDeVozNome}"${tomDeVozDescricao ? `: ${tomDeVozDescricao}` : ''}${tomDeVozExemplo ? `. Exemplo de frase nesse tom: "${tomDeVozExemplo}"` : ''}.`
+      : null,
+    designSystemMarkdown
+      ? `Considere também esta documentação de estilo visual (pode influenciar o tom/objetividade do texto):\n${designSystemMarkdown}`
+      : null,
+    'Estrutura obrigatória: o slide 1 é do tipo "cover" (gancho curto e forte que prende atenção), o último slide é do tipo "cta" (chamada pra ação clara), e todos os slides do meio são do tipo "body" (cada um desenvolve uma ideia/passo, direto e objetivo).',
+    'Cada slide deve ter no máximo 2-3 frases curtas, sem markdown, sem excesso de emojis. Responda em português do Brasil.',
+    `Responda com um array JSON de exatamente ${quantidadeSlides} objetos, na ordem dos slides, cada um no formato {"tipo": "cover"|"body"|"cta", "texto": string}.`,
+  ].filter(Boolean).join('\n\n')
+
+  const candidate = await callGemini({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'ARRAY',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            tipo: { type: 'STRING', enum: ['cover', 'body', 'cta'] },
+            texto: { type: 'STRING' },
+          },
+          required: ['tipo', 'texto'],
+        },
+      },
+    },
+  })
+
+  const slides = parseJsonText<{ tipo: 'cover' | 'body' | 'cta'; texto: string }[]>(textOf(candidate))
+  return { slides }
+}
+
 interface GerarImagemSlideInput {
   formato: '4:5' | '1:1'
   tipo?: 'cover' | 'body' | 'cta'
@@ -256,6 +308,8 @@ Deno.serve(async (req) => {
         return json(await gerarIdeia(input as GerarIdeiaInput))
       case 'gerar-slide-texto':
         return json(await gerarSlideTexto(input as GerarSlideTextoInput))
+      case 'gerar-carrossel':
+        return json(await gerarCarrossel(input as GerarCarrosselInput))
       case 'extrair-url':
         return json(await extrairUrl(input as ExtrairUrlInput))
       case 'pesquisar-links':

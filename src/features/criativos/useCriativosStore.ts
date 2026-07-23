@@ -29,6 +29,8 @@ interface CriativosState {
   remove: (id: string) => Promise<void>
   duplicate: (id: string) => Promise<Criativo>
   updateSlide: (criativoId: string, slideId: string, patch: Partial<Slide>) => Promise<void>
+  /** Aplica um patch por slide numa única persistência — usado pela geração automática do carrossel. */
+  updateSlides: (criativoId: string, patches: { slideId: string; patch: Partial<Slide> }[]) => Promise<void>
   addSlide: (criativoId: string) => Promise<void>
   removeSlide: (criativoId: string, slideId: string) => Promise<void>
   moveSlide: (criativoId: string, slideId: string, direction: 'left' | 'right') => Promise<void>
@@ -125,6 +127,17 @@ export const useCriativosStore = create<CriativosState>((set, get) => ({
     const current = get().criativos.find((criativo) => criativo.id === criativoId)
     if (!current) return
     const slides = current.slides.map((slide) => (slide.id === slideId ? { ...slide, ...patch } : slide))
+    const updated = await persist({ ...current, slides })
+    set({ criativos: get().criativos.map((criativo) => (criativo.id === criativoId ? updated : criativo)) })
+  },
+
+  async updateSlides(criativoId, patches) {
+    const current = get().criativos.find((criativo) => criativo.id === criativoId)
+    if (!current) return
+    const patchPorSlide = new Map(patches.map((p) => [p.slideId, p.patch]))
+    const slides = current.slides.map((slide) =>
+      patchPorSlide.has(slide.id) ? { ...slide, ...patchPorSlide.get(slide.id) } : slide,
+    )
     const updated = await persist({ ...current, slides })
     set({ criativos: get().criativos.map((criativo) => (criativo.id === criativoId ? updated : criativo)) })
   },

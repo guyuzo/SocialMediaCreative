@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight, Copy, Download, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
@@ -7,37 +7,66 @@ import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Tabs } from '@/components/ui/Tabs'
+import { Spinner } from '@/components/ui/Spinner'
 import { useCriativosStore, proximoStatus } from '@/features/criativos/useCriativosStore'
 import { useTemasStore } from '@/features/temas/useTemasStore'
 import { useReferenciasStore } from '@/features/referencias/useReferenciasStore'
 import { useDesignSystemsStore } from '@/features/designSystems/useDesignSystemsStore'
+import { useTonsDeVozStore } from '@/features/tonsDeVoz/useTonsDeVozStore'
 import { SlideEditor } from '@/features/criativos/SlideEditor'
 import { STATUS_BADGE_CLASSES } from '@/features/criativos/statusStyles'
 import { textGenerationService } from '@/lib/ai/textService'
 import { imageGenerationService } from '@/lib/ai/imageService'
 import { buildContextoFromReferencias } from '@/lib/content/buildContexto'
 import { useToastStore } from '@/lib/toast/useToastStore'
-import { CRIATIVO_STATUS_LABEL, SLIDE_MAX, SLIDE_MIN } from '@/types/criativo'
+import { CRIATIVO_STATUS_LABEL, SLIDE_MAX, SLIDE_MIN, type SlideTipo } from '@/types/criativo'
 
 export function CriativoEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { criativos, loaded, load, update, remove, duplicate, updateSlide, addSlide, removeSlide, moveSlide } =
-    useCriativosStore()
+  const location = useLocation()
+  const {
+    criativos,
+    loaded,
+    load,
+    update,
+    remove,
+    duplicate,
+    updateSlide,
+    updateSlides,
+    addSlide,
+    removeSlide,
+    moveSlide,
+  } = useCriativosStore()
   const { temas, loaded: temasLoaded, load: loadTemas } = useTemasStore()
   const { referencias, loaded: referenciasLoaded, load: loadReferencias } = useReferenciasStore()
   const { designSystems, loaded: designSystemsLoaded, load: loadDesignSystems } = useDesignSystemsStore()
+  const { tonsDeVoz, loaded: tonsDeVozLoaded, load: loadTonsDeVoz } = useTonsDeVozStore()
   const showToast = useToastStore((state) => state.show)
 
   const [slideAtivo, setSlideAtivo] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [gerandoCarrossel, setGerandoCarrossel] = useState(false)
+  const autoGerarDisparado = useRef(false)
 
   useEffect(() => {
     if (!loaded) load()
     if (!temasLoaded) loadTemas()
     if (!referenciasLoaded) loadReferencias()
     if (!designSystemsLoaded) loadDesignSystems()
-  }, [loaded, load, temasLoaded, loadTemas, referenciasLoaded, loadReferencias, designSystemsLoaded, loadDesignSystems])
+    if (!tonsDeVozLoaded) loadTonsDeVoz()
+  }, [
+    loaded,
+    load,
+    temasLoaded,
+    loadTemas,
+    referenciasLoaded,
+    loadReferencias,
+    designSystemsLoaded,
+    loadDesignSystems,
+    tonsDeVozLoaded,
+    loadTonsDeVoz,
+  ])
 
   const criativo = criativos.find((item) => item.id === id)
   const tema = useMemo(() => temas.find((t) => t.id === criativo?.temaId), [temas, criativo])
@@ -51,6 +80,15 @@ export function CriativoEditorPage() {
       setSlideAtivo(criativo.slides[0]?.id ?? null)
     }
   }, [criativo, slideAtivo])
+
+  useEffect(() => {
+    if (!criativo || autoGerarDisparado.current) return
+    if (!(location.state as { autoGerar?: boolean } | null)?.autoGerar) return
+    autoGerarDisparado.current = true
+    navigate(location.pathname, { replace: true, state: {} })
+    gerarCarrosselCompleto()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criativo])
 
   if (loaded && !criativo) {
     return (
@@ -112,6 +150,83 @@ export function CriativoEditorPage() {
     }
   }
 
+  /**
+   * Dispara a geração automática de texto + imagem de todos os slides de uma
+   * vez, a partir do contexto do Node Principal — a IA já entrega o carrossel
+   * pronto; os botões "Gerar novamente" por slide ficam só pra ajustes pontuais.
+   */
+  async function gerarCarrosselCompleto() {
+    if (!criativo) return
+    setGerandoCarrossel(true)
+    try {
+      await updateSlides(
+        criativo.id,
+        criativo.slides.map((s) => ({ slideId: s.id, patch: { status: 'gerando' } })),
+      )
+
+      const contextoTema = buildContextoFromReferencias(referencias, criativo.temaId)
+      const contexto = [criativo.referenciasTexto, contextoTema].filter((parte) => parte?.trim()).join('\n\n') || undefined
+      const tom = tonsDeVoz.find((t) => t.id === criativo.tomDeVozId)
+
+      let conteudos: { tipo: SlideTipo; texto: string }[]
+      try {
+        conteudos = await textGenerationService.generateCarrossel({
+          titulo: criativo.titulo,
+          descricao: criativo.descricao,
+          contexto,
+          tomDeVoz: tom ? { nome: tom.nome, descricao: tom.descricao, exemploFrase: tom.exemploFrase } : undefined,
+          designSystemMarkdown: designSystem?.documentacaoMarkdown,
+          formato: criativo.formato,
+          quantidadeSlides: criativo.slides.length,
+        })
+      } catch {
+        await updateSlides(
+          criativo.id,
+          criativo.slides.map((s) => ({ slideId: s.id, patch: { status: 'erro' } })),
+        )
+        showToast('Falha ao gerar o texto do carrossel.', 'error')
+        return
+      }
+
+      await updateSlides(
+        criativo.id,
+        criativo.slides.map((s, index) => {
+          const conteudo = conteudos[index]
+          return {
+            slideId: s.id,
+            patch: conteudo
+              ? { texto: conteudo.texto, tipo: conteudo.tipo, originalTexto: conteudo.texto, status: 'gerando' as const }
+              : { status: 'gerando' as const },
+          }
+        }),
+      )
+
+      for (const s of criativo.slides) {
+        const conteudo = conteudos[s.ordem]
+        const texto = conteudo?.texto ?? s.texto
+        try {
+          const { url } = await imageGenerationService.generateSlideImage({
+            formato: criativo.formato,
+            tipo: conteudo?.tipo ?? s.tipo,
+            texto,
+            designSystemMarkdown: designSystem?.documentacaoMarkdown,
+          })
+          await updateSlide(criativo.id, s.id, {
+            imagemUrl: url,
+            status: 'gerado',
+            imageSource: 'generated',
+            promptImagem: texto,
+          })
+        } catch {
+          await updateSlide(criativo.id, s.id, { status: 'erro' })
+          showToast(`Falha ao gerar imagem do slide ${s.ordem + 1}.`, 'error')
+        }
+      }
+    } finally {
+      setGerandoCarrossel(false)
+    }
+  }
+
   function exportarImagens() {
     const comImagem = criativo!.slides.filter((s) => s.imagemUrl)
     if (comImagem.length === 0) {
@@ -156,6 +271,14 @@ export function CriativoEditorPage() {
         </span>
       </div>
 
+      {gerandoCarrossel && (
+        <div className="flex items-center gap-2 rounded-md bg-accent-soft px-3 py-2 text-sm text-accent-primary">
+          <Spinner size={16} />
+          Gerando o carrossel com IA ({criativo.slides.filter((s) => s.status === 'gerado').length}/
+          {criativo.slides.length} slides prontos)...
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         {avancar && (
           <Button variant="secondary" onClick={() => update(criativo.id, { status: avancar })}>
@@ -186,28 +309,28 @@ export function CriativoEditorPage() {
           <div className="flex shrink-0 gap-1">
             <IconButton
               label="Mover slide para a esquerda"
-              disabled={!slide || slide.ordem === 0}
+              disabled={gerandoCarrossel || !slide || slide.ordem === 0}
               onClick={() => slide && moveSlide(criativo.id, slide.id, 'left')}
             >
               <ChevronLeft size={16} strokeWidth={2} />
             </IconButton>
             <IconButton
               label="Mover slide para a direita"
-              disabled={!slide || slide.ordem === criativo.slides.length - 1}
+              disabled={gerandoCarrossel || !slide || slide.ordem === criativo.slides.length - 1}
               onClick={() => slide && moveSlide(criativo.id, slide.id, 'right')}
             >
               <ChevronRight size={16} strokeWidth={2} />
             </IconButton>
             <IconButton
               label="Remover slide"
-              disabled={criativo.slides.length <= SLIDE_MIN}
+              disabled={gerandoCarrossel || criativo.slides.length <= SLIDE_MIN}
               onClick={() => slide && removeSlide(criativo.id, slide.id)}
             >
               <Trash2 size={16} strokeWidth={2} />
             </IconButton>
             <IconButton
               label="Adicionar slide"
-              disabled={criativo.slides.length >= SLIDE_MAX}
+              disabled={gerandoCarrossel || criativo.slides.length >= SLIDE_MAX}
               onClick={() => addSlide(criativo.id)}
             >
               <Plus size={16} strokeWidth={2} />

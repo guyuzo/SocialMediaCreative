@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, Plus, X } from 'lucide-react'
+import { Sparkles, Plus, X, Minus } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
-import { Slider } from '@/components/ui/Slider'
 import { Pill } from '@/components/ui/Pill'
 import { Button } from '@/components/ui/Button'
 import { IconButton } from '@/components/ui/IconButton'
@@ -234,14 +233,35 @@ export function NodePrincipalModal({ open, onClose, onSubmit }: NodePrincipalMod
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-text-secondary">Slides: {quantidadeSlides}</label>
-          <Slider
-            min={SLIDE_MIN}
-            max={SLIDE_MAX}
-            value={quantidadeSlides}
-            onChange={(e) => setQuantidadeSlides(Number(e.target.value))}
-          />
+          <label className="mb-1.5 block text-sm font-medium text-text-secondary">Quantidade de slides</label>
+          <div className="flex items-center gap-3">
+            <IconButton
+              label="Diminuir quantidade de slides"
+              className="border border-border-subtle bg-bg-app disabled:opacity-40"
+              disabled={quantidadeSlides <= SLIDE_MIN}
+              onClick={() => setQuantidadeSlides((q) => Math.max(SLIDE_MIN, q - 1))}
+            >
+              <Minus size={16} strokeWidth={2} />
+            </IconButton>
+            <span className="w-8 shrink-0 text-center text-lg font-semibold text-text-primary">{quantidadeSlides}</span>
+            <IconButton
+              label="Aumentar quantidade de slides"
+              className="border border-border-subtle bg-bg-app disabled:opacity-40"
+              disabled={quantidadeSlides >= SLIDE_MAX}
+              onClick={() => setQuantidadeSlides((q) => Math.min(SLIDE_MAX, q + 1))}
+            >
+              <Plus size={16} strokeWidth={2} />
+            </IconButton>
+            <span className="text-xs text-text-muted">
+              mín. {SLIDE_MIN}, máx. {SLIDE_MAX}
+            </span>
+          </div>
         </div>
+
+        <p className="text-xs text-text-secondary">
+          A IA gera o texto e a imagem de todos os slides automaticamente. Depois, dá pra ajustar cada slide
+          individualmente no editor.
+        </p>
       </div>
     </Modal>
   )

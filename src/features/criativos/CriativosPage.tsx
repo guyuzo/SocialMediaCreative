@@ -36,7 +36,7 @@ export function CriativosPage() {
 
   async function handleCreate(input: NodePrincipalInput) {
     const criativo = await create(input)
-    navigate(`/criativos/${criativo.id}`)
+    navigate(`/criativos/${criativo.id}`, { state: { autoGerar: true } })
   }
 
   return (
