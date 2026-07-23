@@ -3,7 +3,6 @@ import { useThemeStore, type Theme } from '@/lib/theme/useThemeStore'
 const OPTIONS: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Claro' },
   { value: 'dark', label: 'Escuro' },
-  { value: 'momentum', label: 'Momentum' },
 ]
 
 export function ThemeToggle() {

@@ -35,7 +35,6 @@ export default {
         sm: '0 2px 8px rgba(16,24,40,0.06)',
         md: '0 8px 24px rgba(16,24,40,0.08)',
         lg: '0 16px 40px rgba(16,24,40,0.12)',
-        'glow-accent': '0 0 60px rgba(255,107,26,0.35)',
       },
       colors: {
         // primitivos
@@ -83,7 +82,6 @@ export default {
         'accent-soft': 'var(--color-accent-soft)',
         success: 'var(--color-success)',
         danger: 'var(--color-danger)',
-        glow: 'var(--color-glow)',
       },
     },
   },

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type Theme = 'light' | 'dark' | 'momentum'
+export type Theme = 'light' | 'dark'
 
 interface ThemeState {
   theme: Theme
@@ -24,7 +24,11 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: 'social-creative-theme',
       onRehydrateStorage: () => (state) => {
-        if (state) applyThemeToDocument(state.theme)
+        if (!state) return
+        // Normaliza valor antigo persistido ('momentum', removido do produto)
+        // pra não deixar data-theme apontando pra um tema que não existe mais.
+        if (state.theme !== 'light' && state.theme !== 'dark') state.theme = 'light'
+        applyThemeToDocument(state.theme)
       },
     },
   ),

@@ -2,6 +2,8 @@
 
 Documento de fundação estética, extraído das imagens de referência. Aqui só entram cores, tipografia, formas e efeitos. Funcionalidade do sistema de posts fica para depois.
 
+> **Atualização (2026-07-23):** o tema Momentum (laranja) foi removido do produto por decisão do usuário — o app agora tem só modo claro/escuro. As seções abaixo que descrevem Momentum ficam como registro histórico da exploração visual, mas não correspondem mais a `ThemeToggle`/`useThemeStore` nem a `src/index.css`.
+
 ## 1. Conceito visual
 
 A referência mistura dois mundos: painéis de SaaS modernos (tipo Elementor) e uma estética "Apple", limpa e com muito espaço vazio. Cinco ideias sustentam isso:
